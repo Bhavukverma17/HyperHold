@@ -27,9 +27,9 @@ export const CategoriesScreen = ({ navigation }) => {
 
   const getLinkCount = (categoryId) => {
     if (categoryId === 'all') {
-      return state.links.length;
+      return state.allLinks.length; // <-- FIX: Read from allLinks
     }
-    return state.links.filter(link => link.category === categoryId).length;
+    return state.allLinks.filter(link => link.category === categoryId).length; // <-- FIX: Read from allLinks
   };
 
   const renderCategory = ({ item }) => (
@@ -176,4 +176,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-}); 
+});

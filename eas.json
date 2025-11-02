@@ -15,11 +15,11 @@
     },
     "production": {
       "android": {
-        "buildType": "apk"
+        "buildType": "aab"
       }
     }
   },
   "submit": {
     "production": {}
   }
-} 
+}

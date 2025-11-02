@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { Appearance } from 'react-native';
-import { initStorage, saveLink, getLinks, searchLinks as storageSearchLinks, deleteLink as storageDeleteLink, getCategories, saveCategory, getSettings, updateSetting as storageUpdateSetting } from '../utils/storage';
+import { initDatabase as initStorage, saveLink, getLinks, searchLinks as storageSearchLinks, deleteLink as storageDeleteLink, getCategories, saveCategory, getSettings, updateSetting as storageUpdateSetting } from '../utils/database';
 import { createLinkFromUrl } from '../utils/helpers';
 
 const initialState = {
   links: [],
+  allLinks: [], // <-- FIX: Added master list for all links
   categories: [],
   settings: {
     darkMode: 'system',
@@ -25,12 +26,21 @@ const appReducer = (state, action) => {
       return { ...state, isLoading: action.payload };
     case 'SET_LINKS':
       return { ...state, links: action.payload };
+    case 'SET_ALL_LINKS': // <-- FIX: New case for master list
+      return { ...state, allLinks: action.payload };
     case 'ADD_LINK':
-      return { ...state, links: [action.payload, ...state.links] };
+      return { 
+        ...state, 
+        links: [action.payload, ...state.links],
+        allLinks: [action.payload, ...state.allLinks] // <-- FIX: Add to master list
+      };
     case 'UPDATE_LINK':
       return {
         ...state,
         links: state.links.map(link =>
+          link.id === action.payload.id ? action.payload : link
+        ),
+        allLinks: state.allLinks.map(link => // <-- FIX: Update in master list
           link.id === action.payload.id ? action.payload : link
         ),
       };
@@ -38,6 +48,7 @@ const appReducer = (state, action) => {
       return {
         ...state,
         links: state.links.filter(link => link.id !== action.payload),
+        allLinks: state.allLinks.filter(link => link.id !== action.payload), // <-- FIX: Delete from master list
       };
     case 'SET_CATEGORIES':
       return { ...state, categories: action.payload };
@@ -81,11 +92,16 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-      const isDark = colorScheme === 'dark';
-      dispatch({ type: 'SET_DARK_MODE', payload: isDark });
+      // This listener is for system changes.
+      // The actual isDarkMode state is set in initializeApp and updateSetting
+      // based on the user's *preference* (light, dark, or system).
+      if (state.settings.darkMode === 'system') {
+        const isDark = colorScheme === 'dark';
+        dispatch({ type: 'SET_DARK_MODE', payload: isDark });
+      }
     });
     return () => subscription?.remove();
-  }, []);
+  }, [state.settings.darkMode]);
 
   const initializeApp = async () => {
     try {
@@ -105,6 +121,7 @@ export const AppProvider = ({ children }) => {
       console.log('Data loaded:', { linksCount: links.length, categoriesCount: categories.length });
       
       dispatch({ type: 'SET_LINKS', payload: links });
+      dispatch({ type: 'SET_ALL_LINKS', payload: links }); // <-- FIX: Populate master list
       dispatch({ type: 'SET_CATEGORIES', payload: categories });
       dispatch({ type: 'SET_SETTINGS', payload: settings });
       const isDark = settings.darkMode === 'dark' || (settings.darkMode === 'system' && Appearance.getColorScheme() === 'dark');
@@ -187,7 +204,9 @@ export const AppProvider = ({ children }) => {
 
   const updateSetting = async (key, value) => {
     try {
-      await storageUpdateSetting(key, value);
+      // Convert boolean to string for database
+      const valueToStore = typeof value === 'boolean' ? value.toString() : value;
+      await storageUpdateSetting(key, valueToStore);
       dispatch({ type: 'UPDATE_SETTING', payload: { key, value } });
       
       // Update dark mode state if darkMode setting is changed
@@ -218,4 +237,4 @@ export const AppProvider = ({ children }) => {
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
-}; 
+};

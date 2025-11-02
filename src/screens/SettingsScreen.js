@@ -6,7 +6,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
 import { getThemeColors, spacing, borderRadius, typography, shadows } from '../utils/theme';
-import { checkBiometricAvailability, setAppLockEnabled, setBiometricEnabled } from '../utils/auth';
+import { checkBiometricAvailability } from '../utils/auth'; // <-- FIX: Removed unused imports
 
 export const SettingsScreen = ({ navigation }) => {
   const { state, updateSetting } = useApp();
@@ -32,7 +32,7 @@ export const SettingsScreen = ({ navigation }) => {
 
   const handleAppLockChange = async (value) => {
     try {
-      await setAppLockEnabled(value);
+      // await setAppLockEnabled(value); // <-- FIX: Removed redundant call
       await updateSetting('appLock', value);
     } catch (error) {
       Alert.alert('Error', 'Failed to update app lock setting');
@@ -49,7 +49,7 @@ export const SettingsScreen = ({ navigation }) => {
       return;
     }
     try {
-      await setBiometricEnabled(value);
+      // await setBiometricEnabled(value); // <-- FIX: Removed redundant call
       await updateSetting('biometricAuth', value);
     } catch (error) {
       Alert.alert('Error', 'Failed to update biometric authentication setting');
@@ -85,6 +85,7 @@ export const SettingsScreen = ({ navigation }) => {
       {[
         { value: 'light', label: 'Light', icon: 'light-mode' },
         { value: 'dark', label: 'Dark', icon: 'dark-mode' },
+        { value: 'system', label: 'System', icon: 'settings-brightness' } // <-- FIX: Added System option
       ].map((option) => (
         <TouchableOpacity
           key={option.value}
@@ -155,7 +156,7 @@ export const SettingsScreen = ({ navigation }) => {
                 onValueChange={handleBiometricAuthChange}
                 trackColor={{ false: colors.border, true: colors.primary + '40' }}
                 thumbColor={Boolean(state.settings.biometricAuth) ? colors.primary : colors.textSecondary}
-                disabled={!isBiometricAvailable}
+                disabled={!isBiometricAvailable || !state.settings.appLock} // <-- FIX: Disable if App Lock is off
               />,
               'fingerprint'
             )}
@@ -288,4 +289,4 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     fontWeight: '500',
   },
-}); 
+});

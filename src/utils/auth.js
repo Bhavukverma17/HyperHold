@@ -1,9 +1,10 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSettings } from './database'; // <-- FIX: Import from database
 
 const AUTH_KEYS = {
-  APP_LOCK_ENABLED: 'hyperhold_app_lock_enabled',
-  BIOMETRIC_ENABLED: 'hyperhold_biometric_enabled',
+  // APP_LOCK_ENABLED: 'hyperhold_app_lock_enabled', // <-- FIX: Removed
+  // BIOMETRIC_ENABLED: 'hyperhold_biometric_enabled', // <-- FIX: Removed
   AUTH_REQUIRED: 'hyperhold_auth_required',
 };
 
@@ -36,8 +37,10 @@ export const authenticateUser = async (reason = 'Please authenticate to access t
 
 export const isAppLockEnabled = async () => {
   try {
-    const value = await AsyncStorage.getItem(AUTH_KEYS.APP_LOCK_ENABLED);
-    return value === 'true';
+    // const value = await AsyncStorage.getItem(AUTH_KEYS.APP_LOCK_ENABLED); // <-- FIX: Removed
+    // return value === 'true'; // <-- FIX: Removed
+    const settings = await getSettings(); // <-- FIX: Read from database
+    return settings.appLock; // <-- FIX: Read from database
   } catch (error) {
     console.error('Error checking app lock status:', error);
     return false;
@@ -46,31 +49,19 @@ export const isAppLockEnabled = async () => {
 
 export const isBiometricEnabled = async () => {
   try {
-    const value = await AsyncStorage.getItem(AUTH_KEYS.BIOMETRIC_ENABLED);
-    return value === 'true';
+    // const value = await AsyncStorage.getItem(AUTH_KEYS.BIOMETRIC_ENABLED); // <-- FIX: Removed
+    // return value === 'true'; // <-- FIX: Removed
+    const settings = await getSettings(); // <-- FIX: Read from database
+    return settings.biometricAuth; // <-- FIX: Read from database
   } catch (error) {
     console.error('Error checking biometric status:', error);
     return false;
   }
 };
 
-export const setAppLockEnabled = async (enabled) => {
-  try {
-    await AsyncStorage.setItem(AUTH_KEYS.APP_LOCK_ENABLED, enabled.toString());
-  } catch (error) {
-    console.error('Error setting app lock:', error);
-    throw error;
-  }
-};
+// <-- FIX: Removed setAppLockEnabled function -->
 
-export const setBiometricEnabled = async (enabled) => {
-  try {
-    await AsyncStorage.setItem(AUTH_KEYS.BIOMETRIC_ENABLED, enabled.toString());
-  } catch (error) {
-    console.error('Error setting biometric auth:', error);
-    throw error;
-  }
-};
+// <-- FIX: Removed setBiometricEnabled function -->
 
 export const requireAuthentication = async () => {
   try {
@@ -120,4 +111,4 @@ export const isAuthRequired = async () => {
     console.error('Error checking auth required:', error);
     return false;
   }
-}; 
+};
