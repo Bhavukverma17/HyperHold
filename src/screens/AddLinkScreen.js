@@ -20,11 +20,15 @@ export const AddLinkScreen = ({ navigation, route }) => {
       title: editingLink ? 'Edit Link' : 'Add Link',
       headerRight: () => (
         <TouchableOpacity style={styles.headerButton} onPress={handleSave} disabled={isLoading}>
-          <Text style={[styles.headerButtonText, { color: colors.primary }]}>
+          <Text style={[styles.headerButtonText, { color: isLoading ? colors.secondary : colors.primary }]}>
             {isLoading ? 'Saving...' : 'Save'}
           </Text>
         </TouchableOpacity>
       ),
+      headerStyle: {
+        backgroundColor: colors.background,
+      },
+      headerTintColor: colors.text,
     });
   }, [url, title, description, category, isLoading, editingLink]);
 
@@ -72,7 +76,7 @@ export const AddLinkScreen = ({ navigation, route }) => {
         styles.categoryOption,
         {
           backgroundColor: category === cat.id ? colors.primary : colors.surface,
-          borderColor: colors.border,
+          borderColor: category === cat.id ? colors.primary : colors.border,
         },
       ]}
       onPress={() => setCategory(cat.id)}
@@ -101,70 +105,51 @@ export const AddLinkScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>URL *</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Link Details</Text>
+        {/* FIX: Moved dynamic colors inline */}
+        <View style={[styles.inputGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.surface,
-                color: colors.text,
-                borderColor: colors.border,
-              },
-            ]}
+            style={[styles.input, { color: colors.text }]}
             value={url}
             onChangeText={setUrl}
-            placeholder="https://example.com"
+            placeholder="URL (required)"
             placeholderTextColor={colors.textSecondary}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
             returnKeyType="next"
           />
-        </View>
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Title</Text>
+          {/* FIX: Moved dynamic color inline */}
+          <View style={[styles.separator, { backgroundColor: colors.border }]} />
           <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.surface,
-                color: colors.text,
-                borderColor: colors.border,
-              },
-            ]}
+            style={[styles.input, { color: colors.text }]}
             value={title}
             onChangeText={setTitle}
-            placeholder="Link title (optional)"
+            placeholder="Title (optional)"
             placeholderTextColor={colors.textSecondary}
             returnKeyType="next"
           />
-        </View>
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Description</Text>
+          {/* FIX: Moved dynamic color inline */}
+          <View style={[styles.separator, { backgroundColor: colors.border }]} />
           <TextInput
             style={[
+              styles.input,
               styles.textArea,
-              {
-                backgroundColor: colors.surface,
-                color: colors.text,
-                borderColor: colors.border,
-              },
+              { color: colors.text }
             ]}
             value={description}
             onChangeText={setDescription}
-            placeholder="Add a description (optional)"
+            placeholder="Description (optional)"
             placeholderTextColor={colors.textSecondary}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
           />
         </View>
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Category</Text>
-          <View style={styles.categoriesContainer}>
-            {state.categories.map(renderCategoryOption)}
-          </View>
+
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Category</Text>
+        <View style={styles.categoriesContainer}>
+          {state.categories.map(renderCategoryOption)}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -186,50 +171,59 @@ const styles = StyleSheet.create({
   },
   headerButtonText: {
     ...typography.body,
+    fontSize: 17,
     fontWeight: '600',
-  },
-  section: {
-    marginBottom: spacing.lg,
   },
   sectionTitle: {
-    ...typography.body,
-    fontWeight: '600',
+    ...typography.caption,
+    fontSize: 13,
+    textTransform: 'uppercase',
     marginBottom: spacing.sm,
+    marginLeft: spacing.md,
+  },
+  inputGroup: {
+    borderRadius: borderRadius.md,
+    borderWidth: 0.5,
+    overflow: 'hidden',
+    marginBottom: spacing.lg,
+    // FIX: Removed dynamic colors
   },
   input: {
     ...typography.body,
     padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
+    minHeight: 44,
+  },
+  separator: {
+    height: 0.5,
+    marginLeft: spacing.md,
+    // FIX: Removed dynamic color
   },
   textArea: {
-    ...typography.body,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    minHeight: 80,
+    minHeight: 100,
   },
   categoriesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+    paddingHorizontal: spacing.sm,
   },
   categoryOption: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.round,
     borderWidth: 1,
   },
   categoryColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: spacing.sm,
   },
   categoryText: {
     ...typography.bodySmall,
+    fontSize: 15,
     fontWeight: '500',
   },
-}); 
+});

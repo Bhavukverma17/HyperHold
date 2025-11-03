@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react'; // FIX: Import useEffect
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -17,6 +17,21 @@ export const CategoriesScreen = ({ navigation }) => {
       setSelectedCategory(state.searchFilters.category);
     }, [state.searchFilters.category])
   );
+  
+  // FIX: Set header style
+  useEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: colors.background, // iOS grouped background
+        shadowOpacity: 0, // No shadow for iOS list headers
+        borderBottomWidth: 0,
+      },
+      headerTintColor: colors.text,
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    });
+  }, [navigation, colors]);
 
   const handleCategoryPress = async (category) => {
     setSelectedCategory(category.id);
@@ -27,18 +42,19 @@ export const CategoriesScreen = ({ navigation }) => {
 
   const getLinkCount = (categoryId) => {
     if (categoryId === 'all') {
-      return state.allLinks.length; // <-- FIX: Read from allLinks
+      return state.allLinks.length;
     }
-    return state.allLinks.filter(link => link.category === categoryId).length; // <-- FIX: Read from allLinks
+    return state.allLinks.filter(link => link.category === categoryId).length;
   };
 
   const renderCategory = ({ item }) => (
     <TouchableOpacity
+      // FIX: Moved dynamic colors inline
       style={[
         styles.categoryItem,
         {
-          backgroundColor: selectedCategory === item.id ? colors.primary : colors.card,
-          borderColor: colors.border,
+          backgroundColor: colors.card,
+          borderBottomColor: colors.border,
         },
       ]}
       onPress={() => handleCategoryPress(item)}
@@ -51,7 +67,7 @@ export const CategoriesScreen = ({ navigation }) => {
             style={[
               styles.categoryName,
               {
-                color: selectedCategory === item.id ? 'white' : colors.text,
+                color: selectedCategory === item.id ? colors.primary : colors.text,
               },
             ]}
           >
@@ -61,7 +77,7 @@ export const CategoriesScreen = ({ navigation }) => {
             style={[
               styles.categoryCount,
               {
-                color: selectedCategory === item.id ? 'rgba(255,255,255,0.8)' : colors.textSecondary,
+                color: colors.textSecondary,
               },
             ]}
           >
@@ -71,7 +87,7 @@ export const CategoriesScreen = ({ navigation }) => {
       </View>
       {selectedCategory === item.id && (
         <View style={styles.selectedIndicator}>
-          <MaterialIcons name="check" size={20} color="white" />
+          <Ionicons name="checkmark" size={22} color={colors.primary} />
         </View>
       )}
     </TouchableOpacity>
@@ -89,16 +105,13 @@ export const CategoriesScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Categories</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Filter your links by category</Text>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
       <FlatList
         data={state.categories}
         renderItem={renderCategory}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
+        // FIX: Moved dynamic color inline
+        contentContainerStyle={[styles.listContainer, { backgroundColor: colors.background }]}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
@@ -110,29 +123,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  headerTitle: {
-    ...typography.h2,
-    marginBottom: spacing.xs,
-  },
-  headerSubtitle: {
-    ...typography.bodySmall,
-  },
   listContainer: {
-    paddingHorizontal: spacing.md,
     paddingBottom: spacing.xl,
+    // FIX: Removed dynamic color from here
   },
   categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    borderBottomWidth: 0.5,
+    // FIX: Removed dynamic colors from here
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -140,9 +141,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryColor: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     marginRight: spacing.md,
   },
   categoryInfo: {
@@ -150,11 +151,12 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     ...typography.body,
-    fontWeight: '600',
+    fontWeight: '500',
     marginBottom: spacing.xs,
   },
   categoryCount: {
-    ...typography.caption,
+    ...typography.bodySmall,
+    fontSize: 15,
   },
   selectedIndicator: {
     marginLeft: spacing.sm,

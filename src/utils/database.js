@@ -1,29 +1,40 @@
 import * as SQLite from 'expo-sqlite';
 import { extractDomain, getFaviconUrl, generateId } from './helpers';
 
-let db = null;
+// FIX: Replace `let db = null` with a promise
+let dbPromise = null;
 
-const initDatabaseConnection = async () => {
-  try {
-    console.log('initDatabaseConnection called, db is:', !!db);
-    if (!db) {
-      console.log('Opening database connection...');
-      db = await SQLite.openDatabaseAsync('hyperhold.db');
-      console.log('Database connection established:', !!db);
-    }
-    return db;
-  } catch (error) {
-    console.error('Failed to open database:', error);
-    // Reset the database connection on error
-    db = null;
-    throw error;
+// FIX: Create a new function to get the database connection.
+// This ensures we only try to open it once.
+const getDatabaseConnection = () => {
+  if (dbPromise) {
+    return dbPromise;
   }
+  
+  // Create the promise
+  dbPromise = new Promise(async (resolve, reject) => {
+    try {
+      console.log('Opening database connection...');
+      const db = await SQLite.openDatabaseAsync('hyperhold.db');
+      console.log('Database connection established:', !!db);
+      resolve(db);
+    } catch (error) {
+      console.error('Failed to open database:', error);
+      dbPromise = null; // Reset promise on error so we can try again
+      reject(error);
+    }
+  });
+  
+  return dbPromise;
 };
+
+// FIX: Removed the old `initDatabaseConnection` function
 
 export const initDatabase = async () => {
   try {
     console.log('initDatabase called');
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     
     if (!database) {
       throw new Error('Failed to get database connection');
@@ -102,7 +113,6 @@ export const initDatabase = async () => {
       'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)'
     );
     await insertSettingsStatement.executeAsync(['darkMode', 'system']);
-    // <-- FIX: Removed appLock and biometricAuth
     await insertSettingsStatement.finalizeAsync();
     console.log('Default settings inserted');
     
@@ -110,8 +120,8 @@ export const initDatabase = async () => {
   } catch (error) {
     console.error('Database initialization error:', error);
     console.error('Error stack:', error.stack);
-    // Reset database connection on error
-    db = null;
+    // FIX: Reset the promise on init failure
+    dbPromise = null;
     throw error;
   }
 };
@@ -119,7 +129,8 @@ export const initDatabase = async () => {
 export const saveLink = async (link) => {
   try {
     console.log('Starting saveLink with:', link);
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     console.log('Database connection obtained:', !!database);
     
     if (!database) {
@@ -162,7 +173,8 @@ export const saveLink = async (link) => {
 
 export const getLinks = async (category) => {
   try {
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     if (!database) {
       throw new Error('Database connection not available');
     }
@@ -185,7 +197,8 @@ export const getLinks = async (category) => {
 
 export const searchLinks = async (query) => {
   try {
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     if (!database) {
       throw new Error('Database connection not available');
     }
@@ -207,7 +220,8 @@ export const searchLinks = async (query) => {
 
 export const deleteLink = async (id) => {
   try {
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     if (!database) {
       throw new Error('Database connection not available');
     }
@@ -223,7 +237,8 @@ export const deleteLink = async (id) => {
 
 export const getCategories = async () => {
   try {
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     if (!database) {
       throw new Error('Database connection not available');
     }
@@ -244,7 +259,8 @@ export const getCategories = async () => {
 
 export const saveCategory = async (category) => {
   try {
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     if (!database) {
       throw new Error('Database connection not available');
     }
@@ -262,7 +278,8 @@ export const saveCategory = async (category) => {
 
 export const getSettings = async () => {
   try {
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     if (!database) {
       throw new Error('Database connection not available');
     }
@@ -274,14 +291,12 @@ export const getSettings = async () => {
     
     const settings = {
       darkMode: 'system',
-      // <-- FIX: Removed appLock and biometricAuth
     };
 
     rows.forEach((row) => {
       if (row.key === 'darkMode') {
         settings.darkMode = row.value;
       }
-      // <-- FIX: Removed appLock and biometricAuth parsing
     });
 
     return settings;
@@ -293,7 +308,8 @@ export const getSettings = async () => {
 
 export const updateSetting = async (key, value) => {
   try {
-    const database = await initDatabaseConnection();
+    // FIX: Get connection from the new function
+    const database = await getDatabaseConnection();
     if (!database) {
       throw new Error('Database connection not available');
     }

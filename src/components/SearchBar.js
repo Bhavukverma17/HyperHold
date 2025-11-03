@@ -3,15 +3,17 @@ import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useApp } from '../contexts/AppContext';
-import { getThemeColors, spacing, borderRadius, typography } from '../utils/theme';
+import { getThemeColors, spacing, borderRadius, typography, shadows } from '../utils/theme';
 
 export const SearchBar = ({ value, onChangeText, placeholder = 'Search links...', onClear }) => {
   const { state } = useApp();
   const colors = getThemeColors(state.isDarkMode);
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderRadius: 25, paddingHorizontal: spacing.md }]}> 
+    // FIX: Updated styles for iOS
+    <View style={[styles.container, { backgroundColor: state.isDarkMode ? '#2C2C2E' : '#EFEFF0' }]}>
       <View style={styles.searchIcon}>
-        <MaterialIcons name="search" size={20} color={colors.textSecondary} />
+        {/* FIX: Use Ionicons for iOS search icon */}
+        <Ionicons name="search" size={18} color={colors.textSecondary} />
       </View>
       <TextInput
         style={[styles.input, { color: colors.text }]}
@@ -29,7 +31,8 @@ export const SearchBar = ({ value, onChangeText, placeholder = 'Search links...'
           onPress={onClear}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <MaterialIcons name="close" size={20} color={colors.textSecondary} />
+          {/* FIX: Use Ionicons for iOS clear icon */}
+          <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       )}
     </View>
@@ -42,24 +45,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: spacing.md,
     marginVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    height: 44,
-    elevation: 2,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    borderRadius: borderRadius.md, // iOS search bar radius
+    paddingHorizontal: spacing.sm,
+    height: 36, // iOS search bar height
+    // FIX: Removed Android elevation/shadow
   },
   searchIcon: {
-    marginRight: spacing.sm,
+    marginHorizontal: spacing.sm,
   },
   input: {
     flex: 1,
     ...typography.body,
+    fontSize: 17, // iOS search bar font size
     paddingVertical: 0,
   },
   clearButton: {
     marginLeft: spacing.sm,
+    paddingRight: spacing.sm,
   },
-}); 
+});

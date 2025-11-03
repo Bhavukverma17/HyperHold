@@ -58,24 +58,33 @@ export const LinkCard = ({ link, onEdit }) => {
 
   const handleOptionsPress = () => {
     Alert.alert(
-      'Link Options',
-      'Choose an action',
+      link.title,
+      'Select an action',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Link', onPress: handleOpenLink },
+        { text: 'Open in Browser', onPress: handleOpenLink },
+        { text: 'Copy Link', onPress: handleCopyLink },
+        { text: 'Share Link', onPress: handleShareLink },
         { text: 'Edit', onPress: handleEditLink },
-        { text: 'Delete', style: 'destructive', onPress: handleDelete },
-      ]
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: handleDelete,
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+      { cancelable: true }
     );
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.card }, shadows.small]}>
-      <TouchableOpacity
-        style={styles.content}
-        onPress={handleOpenLink}
-        activeOpacity={0.9}
-      >
+    <TouchableOpacity
+      // FIX: Moved dynamic colors inline
+      style={[styles.container, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
+      onPress={handleOpenLink}
+      onLongPress={handleOptionsPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.content}>
         <View style={styles.faviconContainer}>
           {!imageError && link.favicon ? (
             <Image
@@ -84,102 +93,57 @@ export const LinkCard = ({ link, onEdit }) => {
               onError={() => setImageError(true)}
             />
           ) : (
-            <View style={[styles.faviconPlaceholder, { backgroundColor: colors.primary }]}>
-              <Ionicons name="globe" size={16} color="white" />
+            <View style={[styles.faviconPlaceholder, { backgroundColor: colors.primary + '20' }]}>
+              <Ionicons name="globe-outline" size={18} color={colors.primary} />
             </View>
           )}
         </View>
         <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
             {link.title}
           </Text>
-          <Text style={[styles.domain, { color: colors.textSecondary }]} numberOfLines={1}>
+          <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>
             {link.domain}
+            {link.description ? ` - ${truncateText(link.description, 70)}` : ''}
           </Text>
-          {link.description && (
-            <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>
-              {truncateText(link.description, 80)}
-            </Text>
-          )}
           <Text style={[styles.date, { color: colors.textSecondary }]}>
             {formatDate(link.updatedAt)}
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.openButton}
-          onPress={handleOpenLink}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="open-outline" size={20} color={colors.primary} />
-        </TouchableOpacity>
-      </TouchableOpacity>
-      
-      {/* Action buttons - Android style */}
-      <View style={styles.actionButtonsContainer }>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.surface }]}
-          onPress={handleCopyLink}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <MaterialIcons name="content-copy" size={20} color={colors.primary} />
-          <Text style={[styles.actionButtonText, { color: colors.primary }]}>Copy</Text>
-        </TouchableOpacity>
         
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.surface }]}
-          onPress={handleEditLink}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={styles.optionsButton}
+          onPress={handleOptionsPress}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
         >
-          <MaterialIcons name="edit" size={20} color={colors.primary} />
-          <Text style={[styles.actionButtonText, { color: colors.primary }]}>Edit</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.surface }]}
-          onPress={handleShareLink}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <MaterialIcons name="share" size={20} color={colors.primary} />
-          <Text style={[styles.actionButtonText, { color: colors.primary }]}>Share</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.surface }]}
-          onPress={handleDelete}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <MaterialIcons name="delete" size={20} color={colors.error} />
-          <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete</Text>
+           <Ionicons name="ellipsis-horizontal" size={20} color={colors.border} />
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
+    borderBottomWidth: 0.5,
     padding: spacing.md,
-    elevation: 2,
+    // FIX: Removed dynamic colors
   },
   content: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   faviconContainer: {
     marginRight: spacing.md,
-    marginTop: 2,
   },
   favicon: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: borderRadius.md,
   },
   faviconPlaceholder: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -192,49 +156,22 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontWeight: '600',
     marginBottom: spacing.xs,
-    fontSize: 16,
   },
   domain: {
-    ...typography.bodySmall,
-    marginBottom: spacing.xs,
-    fontSize: 14,
-    opacity: 0.8,
+    // no-op
   },
   description: {
     ...typography.bodySmall,
+    fontSize: 15,
     marginBottom: spacing.xs,
-    fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   date: {
     ...typography.caption,
     fontSize: 12,
-    opacity: 0.6,
+    opacity: 0.8,
   },
-  openButton: {
-    padding: spacing.sm,
-    borderRadius: borderRadius.round,
-    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+  optionsButton: {
+    padding: spacing.xs,
   },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingTop: spacing.md,
-    marginTop: spacing.sm,
-  },
-  actionButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    marginHorizontal: spacing.xs,
-    borderRadius: borderRadius.md,
-  },
-  actionButtonText: {
-    ...typography.bodySmall,
-    marginTop: spacing.xs,
-    fontWeight: '500',
-    fontSize: 12,
-  },
-}); 
+});

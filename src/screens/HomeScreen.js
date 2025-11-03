@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinkCard } from '../components/LinkCard';
 import { SearchBar } from '../components/SearchBar';
-import { FloatingActionButton } from '../components/FloatingActionButton';
+// <-- FIX: Removed FloatingActionButton
 import { useApp } from '../contexts/AppContext';
 import { getThemeColors, spacing, typography, borderRadius } from '../utils/theme';
 
@@ -16,11 +16,7 @@ export const HomeScreen = ({ navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (searchQuery) {
-        searchLinks(searchQuery);
-      } else {
-        loadLinks(state.searchFilters.category);
-      }
+      handleRefresh(); 
     }, [state.searchFilters.category])
   );
 
@@ -59,9 +55,7 @@ export const HomeScreen = ({ navigation }) => {
     navigation.navigate('AddLink', { link });
   };
 
-  const handleAddLink = () => {
-    navigation.navigate('AddLink');
-  };
+  // <-- FIX: Removed handleAddLink (now in header)
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -71,7 +65,7 @@ export const HomeScreen = ({ navigation }) => {
       <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
         {searchQuery 
           ? 'Try adjusting your search terms'
-          : 'Tap the + button to add your first link'
+          : 'Tap the + button in the header to add' // <-- FIX: Updated text
         }
       </Text>
     </View>
@@ -82,20 +76,9 @@ export const HomeScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={[styles.appName, { color: colors.text }]}>HyperHold</Text>
-            <Text style={[styles.appSubtitle, { color: colors.textSecondary }]}>Your Personal Link Vault</Text>
-          </View>
-          <View style={[styles.linkCountBadge, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.linkCountText, { color: colors.textSecondary }]}>
-              {state.links.length} link{state.links.length !== 1 ? 's' : ''}
-            </Text>
-          </View>
-        </View>
-      </View>
+    // FIX: Use `colors.surface` for plain background
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['left', 'right']}>
+      {/* <-- FIX: Header is now in AppNavigator, remove it from here --> */}
       <SearchBar
         value={searchQuery}
         onChangeText={handleSearch}
@@ -116,7 +99,7 @@ export const HomeScreen = ({ navigation }) => {
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
       />
-      <FloatingActionButton onPress={handleAddLink} />
+      {/* <-- FIX: Removed FloatingActionButton --> */}
     </SafeAreaView>
   );
 };
@@ -125,39 +108,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  appName: {
-    ...typography.h1,
-    marginBottom: spacing.xs,
-    fontWeight: 'bold',
-  },
-  appSubtitle: {
-    ...typography.body,
-    opacity: 0.8,
-  },
-  linkCountBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderWidth: 1,
-    borderRadius: 25,
-    paddingHorizontal: spacing.md,
-  },
-  linkCountText: {
-    ...typography.bodySmall,
-    fontWeight: 'bold',
-  },
+  // <-- FIX: Removed header styles
   listContainer: {
     flexGrow: 1,
-    paddingBottom: 100, // Space for FAB
+    paddingBottom: 100, // Space for tab bar
   },
   emptyContainer: {
     flex: 1,
@@ -176,4 +130,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-}); 
+});

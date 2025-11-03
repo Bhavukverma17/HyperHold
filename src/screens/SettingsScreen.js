@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native'; // <-- FIX: Removed Switch
-import { Ionicons } from '@expo/vector-icons';
-import { MaterialIcons } from '@expo/vector-icons';
-// <-- FIX: Removed * as LocalAuthentication
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
 import { getThemeColors, spacing, borderRadius, typography, shadows } from '../utils/theme';
-// <-- FIX: Removed checkBiometricAvailability
 
 export const SettingsScreen = ({ navigation }) => {
   const { state, updateSetting } = useApp();
-  // <-- FIX: Removed isBiometricAvailable state
   const colors = getThemeColors(state.isDarkMode);
 
-  // <-- FIX: Removed checkBiometricAvailabilityLocal and its useEffect
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: colors.background, 
+        shadowOpacity: 0,
+        borderBottomWidth: 0,
+      },
+      headerTintColor: colors.text,
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    });
+  }, [navigation, colors]);
+
 
   const handleDarkModeChange = async (value) => {
     try {
@@ -23,39 +32,36 @@ export const SettingsScreen = ({ navigation }) => {
     }
   };
 
-  // <-- FIX: Removed handleAppLockChange
-  // <-- FIX: Removed handleBiometricAuthChange
-
-  const renderSettingCard = (title, subtitle, rightElement, icon, bottomElement) => (
-    <View style={[styles.settingCard, { backgroundColor: colors.card }, shadows.small]}>
-      <View style={styles.settingContent}>
-        {icon && (
-          <View style={[styles.settingIcon, { backgroundColor: colors.primary + '20' }]}>
-            <MaterialIcons name={icon} size={20} color={colors.primary} />
-          </View>
-        )}
-        <View style={styles.settingTextContainer}>
-          <Text style={[styles.settingTitle, { color: colors.text }]}>{title}</Text>
-          {subtitle && (
-            <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
-          )}
-        </View>
-        {rightElement && <View style={styles.settingRight}>{rightElement}</View>}
+  const renderSettingItem = (title, subtitle, rightElement, icon, iconColor, onPress) => (
+    <TouchableOpacity
+      style={[styles.settingItem, { backgroundColor: colors.card }]}
+      onPress={onPress}
+      disabled={!onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
+      <View style={[styles.settingIconContainer, { backgroundColor: iconColor || colors.primary }]}>
+        <Ionicons name={icon} size={18} color="white" />
       </View>
-      {bottomElement && (
-        <View style={[styles.settingBottom, { borderTopColor: colors.border }]}>
-          {bottomElement}
-        </View>
-      )}
-    </View>
+      <View style={styles.settingTextContainer}>
+        <Text style={[styles.settingTitle, { color: colors.text }]}>{title}</Text>
+        {subtitle && (
+          <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
+        )}
+      </View>
+      <View style={styles.settingRight}>
+        {rightElement}
+        {onPress && <Ionicons name="chevron-forward" size={18} color={colors.border} />}
+      </View>
+    </TouchableOpacity>
   );
 
   const renderDarkModeOptions = () => (
     <View style={styles.optionsContainer}>
       {[
-        { value: 'light', label: 'Light', icon: 'light-mode' },
-        { value: 'dark', label: 'Dark', icon: 'dark-mode' },
-        { value: 'system', label: 'System', icon: 'settings-brightness' } 
+        // FIX: Removed 'ios-' prefix
+        { value: 'light', label: 'Light', icon: 'sunny' },
+        { value: 'dark', label: 'Dark', icon: 'moon' },
+        { value: 'system', label: 'System', icon: 'settings' } 
       ].map((option) => (
         <TouchableOpacity
           key={option.value}
@@ -63,13 +69,12 @@ export const SettingsScreen = ({ navigation }) => {
             styles.optionButton,
             {
               backgroundColor: state.settings.darkMode === option.value ? colors.primary : colors.surface,
-              borderColor: state.settings.darkMode === option.value ? colors.primary : colors.border,
+              borderColor: colors.border,
             },
-            shadows.small,
           ]}
           onPress={() => handleDarkModeChange(option.value)}
         >
-          <MaterialIcons 
+          <Ionicons 
             name={option.icon} 
             size={16} 
             color={state.settings.darkMode === option.value ? 'white' : colors.textSecondary} 
@@ -90,44 +95,42 @@ export const SettingsScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Customize your experience</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
-          <View style={styles.cardContainer}>
-            {renderSettingCard('Theme', 'Choose your preferred theme', null, 'palette', renderDarkModeOptions())}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
+        <View style={[styles.settingGroup, { borderColor: colors.border }]}>
+          {renderSettingItem(
+            'Theme', 
+            `Current: ${state.settings.darkMode.charAt(0).toUpperCase() + state.settings.darkMode.slice(1)}`, 
+            null, 
+            'color-palette', // FIX: Removed 'ios-' prefix
+            colors.primary
+          )}
+          <View style={[styles.settingItem, styles.bottomSettingItem, { backgroundColor: colors.card }]}>
+             {renderDarkModeOptions()}
           </View>
         </View>
 
-        {/* <-- FIX: Removed Security Section --> */}
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
-          <View style={styles.cardContainer}>
-            {renderSettingCard('Version', 'Current app version', <Text style={[styles.versionText, { color: colors.textSecondary }]}>1.0.0</Text>, 'info')}
-            <TouchableOpacity
-              style={[styles.settingCard, { backgroundColor: colors.card }, shadows.small]}
-              onPress={() => {
-                Alert.alert('HyperHold', 'A simple and elegant link manager for your favorite websites.', [{ text: 'OK' }]);
-              }}
-            >
-              <View style={styles.settingContent}>
-                <View style={[styles.settingIcon, { backgroundColor: colors.primary + '20' }]}>
-                  <MaterialIcons name="help" size={20} color={colors.primary} />
-                </View>
-                <View style={styles.settingTextContainer}>
-                  <Text style={[styles.settingTitle, { color: colors.text }]}>About HyperHold</Text>
-                  <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>Learn more about the app</Text>
-                </View>
-                <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
-              </View>
-            </TouchableOpacity>
-          </View>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>About</Text>
+        <View style={[styles.settingGroup, { borderColor: colors.border }]}>
+          {renderSettingItem(
+            'Version', 
+            null, 
+            <Text style={[styles.versionText, { color: colors.textSecondary }]}>1.0.0</Text>, 
+            'information-circle', // FIX: Removed 'ios-' prefix
+            colors.secondary
+          )}
+          <View style={[styles.separator, { backgroundColor: colors.border }]} />
+          {renderSettingItem(
+            'About HyperHold', 
+            null, 
+            null, 
+            'help-circle', // FIX: Removed 'ios-' prefix
+            '#34C759', // iOS System Green
+            () => {
+              Alert.alert('HyperHold', 'A simple and elegant link manager for your favorite websites.', [{ text: 'OK' }]);
+            }
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -138,48 +141,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  headerTitle: {
-    ...typography.h2,
-    marginBottom: spacing.xs,
-    fontWeight: 'bold',
-  },
-  headerSubtitle: {
-    ...typography.body,
-    opacity: 0.8,
-  },
-  section: {
-    marginBottom: spacing.xl,
+  scrollContainer: {
+    paddingVertical: spacing.md,
   },
   sectionTitle: {
-    ...typography.h3,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
-    marginTop: spacing.lg,
-    fontWeight: '600',
-  },
-  cardContainer: {
-    marginHorizontal: spacing.md,
+    ...typography.caption,
+    fontSize: 13,
+    textTransform: 'uppercase',
     marginBottom: spacing.sm,
+    marginLeft: spacing.lg,
   },
-  settingCard: {
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderRadius: borderRadius.lg,
-    elevation: 1,
+  settingGroup: {
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.xl,
+    borderRadius: borderRadius.md,
+    borderWidth: 0.5,
+    overflow: 'hidden',
+    borderColor: 'transparent', // Will be set inline
   },
-  settingContent: {
+  settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: spacing.md,
+    minHeight: 44,
+    backgroundColor: 'transparent', // Will be set inline
   },
-  settingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.lg,
+  bottomSettingItem: {
+    paddingVertical: spacing.md,
+  },
+  separator: {
+    height: 0.5,
+    marginLeft: spacing.md + 30 + spacing.md, 
+    backgroundColor: 'transparent', // Will be set inline
+  },
+  settingIconContainer: {
+    width: 30,
+    height: 30,
+    borderRadius: borderRadius.sm + 2,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -189,39 +187,35 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     ...typography.body,
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-    fontSize: 16,
+    fontSize: 17,
   },
   settingSubtitle: {
-    ...typography.bodySmall,
-    fontSize: 14,
-    opacity: 0.8,
+    ...typography.caption,
+    fontSize: 13,
+    marginTop: 2,
   },
   settingRight: {
-    marginLeft: spacing.md,
-  },
-  settingBottom: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
+    flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: spacing.md,
   },
   optionsContainer: {
     flexDirection: 'row',
     gap: spacing.sm,
     flexWrap: 'wrap',
+    width: '100%',
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    borderWidth: 0.5,
     minWidth: 80,
     justifyContent: 'center',
     gap: spacing.xs,
+    ...shadows.small,
   },
   optionText: {
     ...typography.bodySmall,
@@ -229,7 +223,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   versionText: {
-    ...typography.bodySmall,
-    fontWeight: '500',
+    ...typography.body,
+    fontSize: 17,
   },
 });
