@@ -102,8 +102,7 @@ export const initDatabase = async () => {
       'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)'
     );
     await insertSettingsStatement.executeAsync(['darkMode', 'system']);
-    await insertSettingsStatement.executeAsync(['appLock', 'false']);
-    await insertSettingsStatement.executeAsync(['biometricAuth', 'false']);
+    // <-- FIX: Removed appLock and biometricAuth
     await insertSettingsStatement.finalizeAsync();
     console.log('Default settings inserted');
     
@@ -275,18 +274,14 @@ export const getSettings = async () => {
     
     const settings = {
       darkMode: 'system',
-      appLock: false,
-      biometricAuth: false,
+      // <-- FIX: Removed appLock and biometricAuth
     };
 
     rows.forEach((row) => {
       if (row.key === 'darkMode') {
         settings.darkMode = row.value;
-      } else if (row.key === 'appLock') {
-        settings.appLock = row.value === 'true';
-      } else if (row.key === 'biometricAuth') {
-        settings.biometricAuth = row.value === 'true';
       }
+      // <-- FIX: Removed appLock and biometricAuth parsing
     });
 
     return settings;
@@ -312,4 +307,4 @@ export const updateSetting = async (key, value) => {
     console.error('Update setting error:', error);
     throw error;
   }
-}; 
+};

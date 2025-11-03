@@ -5,12 +5,11 @@ import { createLinkFromUrl } from '../utils/helpers';
 
 const initialState = {
   links: [],
-  allLinks: [], // <-- FIX: Added master list for all links
+  allLinks: [], 
   categories: [],
   settings: {
     darkMode: 'system',
-    appLock: false,
-    biometricAuth: false,
+    // <-- FIX: Removed appLock and biometricAuth
   },
   searchFilters: {
     query: '',
@@ -26,29 +25,27 @@ const appReducer = (state, action) => {
       return { ...state, isLoading: action.payload };
     case 'SET_LINKS':
       return { ...state, links: action.payload };
-    case 'SET_ALL_LINKS': // <-- FIX: New case for master list
+    case 'SET_ALL_LINKS': 
       return { ...state, allLinks: action.payload };
     case 'ADD_LINK':
+      // <-- FIX: Only update allLinks. `links` will be updated by the refresh logic.
       return { 
         ...state, 
-        links: [action.payload, ...state.links],
-        allLinks: [action.payload, ...state.allLinks] // <-- FIX: Add to master list
+        allLinks: [action.payload, ...state.allLinks] 
       };
     case 'UPDATE_LINK':
+      // <-- FIX: Only update allLinks. `links` will be updated by the refresh logic.
       return {
         ...state,
-        links: state.links.map(link =>
-          link.id === action.payload.id ? action.payload : link
-        ),
-        allLinks: state.allLinks.map(link => // <-- FIX: Update in master list
+        allLinks: state.allLinks.map(link =>
           link.id === action.payload.id ? action.payload : link
         ),
       };
     case 'DELETE_LINK':
+      // <-- FIX: Only update allLinks. `links` will be updated by the refresh logic.
       return {
         ...state,
-        links: state.links.filter(link => link.id !== action.payload),
-        allLinks: state.allLinks.filter(link => link.id !== action.payload), // <-- FIX: Delete from master list
+        allLinks: state.allLinks.filter(link => link.id !== action.payload), 
       };
     case 'SET_CATEGORIES':
       return { ...state, categories: action.payload };
@@ -92,9 +89,6 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-      // This listener is for system changes.
-      // The actual isDarkMode state is set in initializeApp and updateSetting
-      // based on the user's *preference* (light, dark, or system).
       if (state.settings.darkMode === 'system') {
         const isDark = colorScheme === 'dark';
         dispatch({ type: 'SET_DARK_MODE', payload: isDark });
@@ -121,7 +115,7 @@ export const AppProvider = ({ children }) => {
       console.log('Data loaded:', { linksCount: links.length, categoriesCount: categories.length });
       
       dispatch({ type: 'SET_LINKS', payload: links });
-      dispatch({ type: 'SET_ALL_LINKS', payload: links }); // <-- FIX: Populate master list
+      dispatch({ type: 'SET_ALL_LINKS', payload: links }); 
       dispatch({ type: 'SET_CATEGORIES', payload: categories });
       dispatch({ type: 'SET_SETTINGS', payload: settings });
       const isDark = settings.darkMode === 'dark' || (settings.darkMode === 'system' && Appearance.getColorScheme() === 'dark');
@@ -135,6 +129,17 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // <-- FIX: This helper function re-runs the current filter/search
+  // to update the visible `links` list after a data change.
+  const refreshDisplayedLinks = async () => {
+    const { query, category } = state.searchFilters;
+    if (query) {
+      await searchLinks(query);
+    } else {
+      await loadLinks(category);
+    }
+  };
+
   const addLink = async (url, title, description, category = 'all') => {
     try {
       console.log('addLink called with:', { url, title, description, category });
@@ -143,7 +148,11 @@ export const AppProvider = ({ children }) => {
       await saveLink(link);
       console.log('Link saved to storage successfully');
       dispatch({ type: 'ADD_LINK', payload: link });
-      console.log('Link added to state successfully');
+      
+      // <-- FIX: Refresh the displayed links
+      await refreshDisplayedLinks();
+      
+      console.log('Link added and list refreshed');
     } catch (error) {
       console.error('Failed to add link:', error);
       console.error('Error stack:', error.stack);
@@ -156,6 +165,9 @@ export const AppProvider = ({ children }) => {
       const updatedLink = { ...link, updatedAt: Date.now() };
       await saveLink(updatedLink);
       dispatch({ type: 'UPDATE_LINK', payload: updatedLink });
+
+      // <-- FIX: Refresh the displayed links
+      await refreshDisplayedLinks();
     } catch (error) {
       console.error('Failed to update link:', error);
       throw error;
@@ -166,6 +178,9 @@ export const AppProvider = ({ children }) => {
     try {
       await storageDeleteLink(id);
       dispatch({ type: 'DELETE_LINK', payload: id });
+      
+      // <-- FIX: Refresh the displayed links
+      await refreshDisplayedLinks();
     } catch (error) {
       console.error('Failed to delete link:', error);
       throw error;
@@ -209,7 +224,6 @@ export const AppProvider = ({ children }) => {
       await storageUpdateSetting(key, valueToStore);
       dispatch({ type: 'UPDATE_SETTING', payload: { key, value } });
       
-      // Update dark mode state if darkMode setting is changed
       if (key === 'darkMode') {
         const isDark = value === 'dark' || (value === 'system' && Appearance.getColorScheme() === 'dark');
         dispatch({ type: 'SET_DARK_MODE', payload: isDark });

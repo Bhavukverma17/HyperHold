@@ -1,26 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Switch, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native'; // <-- FIX: Removed Switch
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as LocalAuthentication from 'expo-local-authentication';
+// <-- FIX: Removed * as LocalAuthentication
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
 import { getThemeColors, spacing, borderRadius, typography, shadows } from '../utils/theme';
-import { checkBiometricAvailability } from '../utils/auth'; // <-- FIX: Removed unused imports
+// <-- FIX: Removed checkBiometricAvailability
 
 export const SettingsScreen = ({ navigation }) => {
   const { state, updateSetting } = useApp();
-  const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+  // <-- FIX: Removed isBiometricAvailable state
   const colors = getThemeColors(state.isDarkMode);
 
-  const checkBiometricAvailabilityLocal = async () => {
-    const isAvailable = await checkBiometricAvailability();
-    setIsBiometricAvailable(isAvailable);
-  };
-
-  React.useEffect(() => {
-    checkBiometricAvailabilityLocal();
-  }, []);
+  // <-- FIX: Removed checkBiometricAvailabilityLocal and its useEffect
 
   const handleDarkModeChange = async (value) => {
     try {
@@ -30,31 +23,8 @@ export const SettingsScreen = ({ navigation }) => {
     }
   };
 
-  const handleAppLockChange = async (value) => {
-    try {
-      // await setAppLockEnabled(value); // <-- FIX: Removed redundant call
-      await updateSetting('appLock', value);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update app lock setting');
-    }
-  };
-
-  const handleBiometricAuthChange = async (value) => {
-    if (value && !isBiometricAvailable) {
-      Alert.alert(
-        'Biometric Authentication',
-        'Biometric authentication is not available on this device.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-    try {
-      // await setBiometricEnabled(value); // <-- FIX: Removed redundant call
-      await updateSetting('biometricAuth', value);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update biometric authentication setting');
-    }
-  };
+  // <-- FIX: Removed handleAppLockChange
+  // <-- FIX: Removed handleBiometricAuthChange
 
   const renderSettingCard = (title, subtitle, rightElement, icon, bottomElement) => (
     <View style={[styles.settingCard, { backgroundColor: colors.card }, shadows.small]}>
@@ -85,7 +55,7 @@ export const SettingsScreen = ({ navigation }) => {
       {[
         { value: 'light', label: 'Light', icon: 'light-mode' },
         { value: 'dark', label: 'Dark', icon: 'dark-mode' },
-        { value: 'system', label: 'System', icon: 'settings-brightness' } // <-- FIX: Added System option
+        { value: 'system', label: 'System', icon: 'settings-brightness' } 
       ].map((option) => (
         <TouchableOpacity
           key={option.value}
@@ -134,34 +104,7 @@ export const SettingsScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Security</Text>
-          <View style={styles.cardContainer}>
-            {renderSettingCard(
-              'App Lock',
-              'Require authentication to open the app',
-              <Switch
-                value={Boolean(state.settings.appLock)}
-                onValueChange={handleAppLockChange}
-                trackColor={{ false: colors.border, true: colors.primary + '40' }}
-                thumbColor={Boolean(state.settings.appLock) ? colors.primary : colors.textSecondary}
-              />,
-              'lock'
-            )}
-            {renderSettingCard(
-              'Biometric Authentication',
-              'Use fingerprint or face ID',
-              <Switch
-                value={Boolean(state.settings.biometricAuth)}
-                onValueChange={handleBiometricAuthChange}
-                trackColor={{ false: colors.border, true: colors.primary + '40' }}
-                thumbColor={Boolean(state.settings.biometricAuth) ? colors.primary : colors.textSecondary}
-                disabled={!isBiometricAvailable || !state.settings.appLock} // <-- FIX: Disable if App Lock is off
-              />,
-              'fingerprint'
-            )}
-          </View>
-        </View>
+        {/* <-- FIX: Removed Security Section --> */}
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
