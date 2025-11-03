@@ -1,6 +1,7 @@
 import React from 'react';
-// FIX: Removed BlurView and imported View
-import { View, Text, Modal, TouchableOpacity, StyleSheet, SafeAreaView, Pressable } from 'react-native';
+// FIX: Import SafeAreaView from 'react-native-safe-area-context'
+import { View, Text, Modal, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../contexts/AppContext';
 import { getThemeColors, spacing, borderRadius, typography } from '../utils/theme';
@@ -28,9 +29,6 @@ export const ActionSheetModal = ({ visible, onClose, actions }) => {
   const { state } = useApp();
   const colors = getThemeColors(state.isDarkMode);
   
-  // FIX: Removed blurType variable
-  // const blurType = state.isDarkMode ? 'dark' : 'light';
-
   return (
     <Modal
       visible={visible}
@@ -41,10 +39,10 @@ export const ActionSheetModal = ({ visible, onClose, actions }) => {
       {/* Backdrop: Closes modal on press */}
       <Pressable style={styles.backdrop} onPress={onClose} />
       
+      {/* FIX: This SafeAreaView now uses the correct import */}
       <SafeAreaView style={styles.container} pointerEvents="box-none">
         <View style={styles.sheetContainer}>
           {/* Main Action Group */}
-          {/* FIX: Replaced BlurView with View and added inline backgroundColor */}
           <View style={[styles.buttonGroup, { backgroundColor: colors.card }]}>
             {actions.map((action, index) => (
               <React.Fragment key={action.title}>
@@ -67,7 +65,6 @@ export const ActionSheetModal = ({ visible, onClose, actions }) => {
           </View>
           
           {/* Cancel Button Group */}
-          {/* FIX: Replaced BlurView with View and added inline backgroundColor */}
           <View style={[styles.cancelGroup, { backgroundColor: colors.card }]}>
             <TouchableOpacity style={styles.actionButton} onPress={onClose} activeOpacity={0.7}>
               <Text style={[styles.actionText, styles.cancelText, { color: colors.primary }]}>
@@ -96,13 +93,11 @@ const styles = StyleSheet.create({
   buttonGroup: {
     borderRadius: borderRadius.lg, // iOS rounded corners for groups
     overflow: 'hidden',
-    // backgroundColor is now applied inline
   },
   cancelGroup: {
     marginTop: spacing.sm,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    // backgroundColor is now applied inline
   },
   actionButton: {
     flexDirection: 'row',
