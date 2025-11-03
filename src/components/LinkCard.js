@@ -5,11 +5,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useApp } from '../contexts/AppContext';
 import { getThemeColors, spacing, borderRadius, typography, shadows } from '../utils/theme';
 import { formatDate, truncateText } from '../utils/helpers';
+import { ActionSheetModal } from './ActionSheetModal'; // <-- FIX: Import the new modal
 
 export const LinkCard = ({ link, onEdit }) => {
   const { deleteLink, state } = useApp();
   const colors = getThemeColors(state.isDarkMode);
   const [imageError, setImageError] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false); // <-- FIX: Add state for modal
 
   const handleDelete = () => {
     Alert.alert(
@@ -56,70 +58,93 @@ export const LinkCard = ({ link, onEdit }) => {
     });
   };
 
+  // FIX: This function now just opens the modal
   const handleOptionsPress = () => {
-    Alert.alert(
-      link.title,
-      'Select an action',
-      [
-        { text: 'Open in Browser', onPress: handleOpenLink },
-        { text: 'Copy Link', onPress: handleCopyLink },
-        { text: 'Share Link', onPress: handleShareLink },
-        { text: 'Edit', onPress: handleEditLink },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: handleDelete,
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ],
-      { cancelable: true }
-    );
+    setIsModalVisible(true);
   };
+  
+  // FIX: Define the list of actions for the modal
+  const cardActions = [
+    { 
+      title: 'Open in Browser', 
+      icon: 'open-outline', 
+      onPress: handleOpenLink 
+    },
+    { 
+      title: 'Copy Link', 
+      icon: 'copy-outline', 
+      onPress: handleCopyLink 
+    },
+    { 
+      title: 'Share Link', 
+      icon: 'share-outline', 
+      onPress: handleShareLink 
+    },
+    { 
+      title: 'Edit', 
+      icon: 'pencil-outline', 
+      onPress: handleEditLink 
+    },
+    { 
+      title: 'Delete', 
+      icon: 'trash-outline', 
+      onPress: handleDelete, 
+      isDestructive: true 
+    },
+  ];
 
   return (
-    <TouchableOpacity
-      // FIX: Moved dynamic colors inline
-      style={[styles.container, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
-      onPress={handleOpenLink}
-      onLongPress={handleOptionsPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.content}>
-        <View style={styles.faviconContainer}>
-          {!imageError && link.favicon ? (
-            <Image
-              source={{ uri: link.favicon }}
-              style={styles.favicon}
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <View style={[styles.faviconPlaceholder, { backgroundColor: colors.primary + '20' }]}>
-              <Ionicons name="globe-outline" size={18} color={colors.primary} />
-            </View>
-          )}
+    <>
+      <TouchableOpacity
+        style={[styles.container, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
+        onPress={handleOpenLink}
+        onLongPress={handleOptionsPress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.content}>
+          <View style={styles.faviconContainer}>
+            {!imageError && link.favicon ? (
+              <Image
+                source={{ uri: link.favicon }}
+                style={styles.favicon}
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <View style={[styles.faviconPlaceholder, { backgroundColor: colors.primary + '20' }]}>
+                <Ionicons name="globe-outline" size={18} color={colors.primary} />
+              </View>
+            )}
+          </View>
+          <View style={styles.textContainer}>
+            <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+              {link.title}
+            </Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>
+              {link.domain}
+              {link.description ? ` - ${truncateText(link.description, 70)}` : ''}
+            </Text>
+            <Text style={[styles.date, { color: colors.textSecondary }]}>
+              {formatDate(link.updatedAt)}
+            </Text>
+          </View>
+          
+          <TouchableOpacity
+            style={styles.optionsButton}
+            onPress={handleOptionsPress}
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          >
+            <Ionicons name="ellipsis-horizontal" size={20} color={colors.border} />
+          </TouchableOpacity>
         </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-            {link.title}
-          </Text>
-          <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>
-            {link.domain}
-            {link.description ? ` - ${truncateText(link.description, 70)}` : ''}
-          </Text>
-          <Text style={[styles.date, { color: colors.textSecondary }]}>
-            {formatDate(link.updatedAt)}
-          </Text>
-        </View>
-        
-        <TouchableOpacity
-          style={styles.optionsButton}
-          onPress={handleOptionsPress}
-          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-        >
-           <Ionicons name="ellipsis-horizontal" size={20} color={colors.border} />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      {/* FIX: Add the modal to the component's render */}
+      <ActionSheetModal 
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        actions={cardActions}
+      />
+    </>
   );
 };
 
@@ -127,7 +152,6 @@ const styles = StyleSheet.create({
   container: {
     borderBottomWidth: 0.5,
     padding: spacing.md,
-    // FIX: Removed dynamic colors
   },
   content: {
     flexDirection: 'row',
